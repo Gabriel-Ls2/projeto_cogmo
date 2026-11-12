@@ -26,12 +26,14 @@ class StationViewSet(viewsets.ReadOnlyModelViewSet):
             'latest_level': {
                 'value': latest_level.value,
                 'unit': latest_level.unit,
+                'source': "synthetic",
                 'observed_at': latest_level.observed_at
             } if latest_level else None,
 
             'latest_rain': {
                 'value': latest_rain.value,
                 'unit': latest_rain.unit,
+                'source': "synthetic",
                 'observed_at': latest_rain.observed_at
             } if latest_rain else None
         })
