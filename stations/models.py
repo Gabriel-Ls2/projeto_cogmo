@@ -24,7 +24,7 @@ class Observation(models.Model):
 
     class Meta:
         constraints = [
-            # garante idempotência: impede duplicidade da mesma métrica no mesmo horário na mesma estação
+            # impede duplicidade da mesma métrica no mesmo horário na mesma estação
             models.UniqueConstraint(
                 fields=['station', 'metric', 'observed_at'],
                 name='unique_station_metric_timestamp'
