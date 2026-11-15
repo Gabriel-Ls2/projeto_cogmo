@@ -57,6 +57,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de Monitoramento Hidrológico',
+    'DESCRIPTION': 'API para monitoramento simulado de níveis de rios e chuvas.',
+    'VERSION': '1.0.0',
+    'REDOC_DIST': 'https://cdn.jsdelivr.net/npm/redoc@2',
+}
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
