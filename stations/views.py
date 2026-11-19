@@ -1,9 +1,10 @@
 from .models import Station
-from .serializers import StationSerializer, ObservationSerializer
+from .serializers import StationSerializer, ObservationSerializer, SummarySerializer, SeriesResponseSerializer
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from datetime import timedelta
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiTypes
 
 class StationViewSet(viewsets.ReadOnlyModelViewSet):
     # endpoint de listagem de estações
@@ -11,6 +12,7 @@ class StationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StationSerializer
 
     # endpoint summary para uma estação específica, retornando a última observação de nível e chuva
+    @extend_schema(responses=SummarySerializer, description='Retorna os dados da estação e suas últimas medições.')
     @action(detail=True, methods=['get'])
     def summary(self, request, pk=None):
 
@@ -26,18 +28,44 @@ class StationViewSet(viewsets.ReadOnlyModelViewSet):
             'latest_level': {
                 'value': latest_level.value,
                 'unit': latest_level.unit,
-                'source': "synthetic",
+                'source': latest_level.source,
                 'observed_at': latest_level.observed_at
             } if latest_level else None,
 
             'latest_rain': {
                 'value': latest_rain.value,
                 'unit': latest_rain.unit,
-                'source': "synthetic",
+                'source': latest_rain.source,
                 'observed_at': latest_rain.observed_at
             } if latest_rain else None
         })
 
+    # endpoint series para uma estação específica, retornando as observações de nível ou chuva em um período de horas
+    @extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='metric',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            required=True,
+            enum=['level', 'rain'],
+            description='Tipo de medição.'
+        ),
+        OpenApiParameter(
+            name='hours',
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            required=False,
+            default=24,
+            description='Período de consulta, entre 1 e 72 horas.'
+        ),
+    ],
+    responses={
+        200: SeriesResponseSerializer,
+        400: OpenApiResponse(description='Parâmetros inválidos.')
+    },
+    description='Retorna o histórico de medições da estação.'
+    ) 
     # endpoint series para uma estação específica, retornando as observações de nível ou chuva em um período de horas
     @action(detail=True, methods=['get'])
     def series(self, request, pk=None):
@@ -61,7 +89,7 @@ class StationViewSet(viewsets.ReadOnlyModelViewSet):
         latest_observation = station.observations.filter(metric=metric).order_by('-observed_at').first()
 
         if not latest_observation:
-            return Response([])
+            return Response({'observations': []})
 
         # calcula o início da janela temporal
         start_time = latest_observation.observed_at - timedelta(hours=hours)
@@ -70,4 +98,4 @@ class StationViewSet(viewsets.ReadOnlyModelViewSet):
         observations = station.observations.filter(metric=metric, observed_at__gte=start_time, observed_at__lte=latest_observation.observed_at).order_by('observed_at')
 
         serializer = ObservationSerializer(observations, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'observations': serializer.data}, status=status.HTTP_200_OK)
