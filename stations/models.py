@@ -18,7 +18,7 @@ class Observation(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name='observations')
     metric = models.CharField(max_length=10, choices=METRIC_CHOICES)
     observed_at = models.DateTimeField()
-    value = models.DecimalField(max_digits=8, decimal_places=2)
+    value = models.FloatField()
     unit = models.CharField(max_length=10)
     source = models.CharField(max_length=20, default='synthetic')
 
