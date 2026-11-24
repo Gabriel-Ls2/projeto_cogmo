@@ -58,9 +58,6 @@ projeto_cogmo/
 └── requirements.txt
 ```
 
-
-```
-
 ## Modelagem do banco de dados
 
 O banco de dados possui duas entidades principais:
